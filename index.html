@@ -377,9 +377,13 @@ async function deleteImage(id) {
   });
 }
 // ====== 进入系统 ======
-async function enterSystem() {
-  document.getElementById("splash").classList.add("hide");
-  loadData();
+async async function enterSystem() {
+  try {
+    document.getElementById("splash").classList.add("hide");
+    await loadData();
+  } catch(e) {
+    console.error("enter error:", e);
+  }
 }
 
 async function loadData() {
