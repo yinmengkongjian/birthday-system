@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -377,13 +377,9 @@ async function deleteImage(id) {
   });
 }
 // ====== 进入系统 ======
-async async function enterSystem() {
-  try {
-    document.getElementById("splash").classList.add("hide");
-    await loadData();
-  } catch(e) {
-    console.error("enter error:", e);
-  }
+async function enterSystem() {
+  document.getElementById("splash").classList.add("hide");
+  await loadData();
 }
 
 async function loadData() {
@@ -505,7 +501,7 @@ async function loadCustomerImages(cid) {
 }
 
 // ====== 上传图片 ======
-async async function uploadImage(cid, category) {
+async function uploadImage(cid, category) {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
@@ -567,7 +563,7 @@ async function updateImgAmount(imgId, cid, val) {
 }
 
 // ====== 新增客户 ======
-async async function addCustomer() {
+async function addCustomer() {
   const c = {
     name: "",
     birthday: "",
