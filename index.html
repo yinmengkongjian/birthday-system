@@ -1,0 +1,897 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>富通城肯德基·生日餐会对账自核系统</title>
+<style>
+:root {
+  --primary: #D4A574;
+  --primary-dark: #B8864E;
+  --primary-light: #F5E6D3;
+  --gold: #C9A96E;
+  --gold-light: #F0E4C8;
+  --bg: #FAF6F1;
+  --card: #FFFFFF;
+  --text: #2C2C2C;
+  --text-light: #999;
+  --border: #E8DDD0;
+  --success: #5CB85C;
+  --danger: #D9534F;
+  --warning: #F0AD4E;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(180,140,100,0.12);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  background: var(--bg); color: var(--text);
+  font-size: 14px; padding-bottom: 80px;
+  -webkit-font-smoothing: antialiased;
+}
+/* ===== 封面 ===== */
+#splash {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:linear-gradient(135deg,#2C1810 0%,#4A2C1A 50%,#2C1810 100%);
+  z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  transition:opacity 0.6s;
+}
+#splash.hide { opacity:0; pointer-events:none; }
+.splash-logo {
+  width:100px; height:100px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  margin-bottom:24px;
+  box-shadow:0 0 40px rgba(201,169,110,0.3);
+}
+.splash-logo svg { width:50px; height:50px; fill:#2C1810; }
+.splash-store { font-size:16px; color:var(--gold); letter-spacing:4px; margin-bottom:4px; }
+.splash-title { font-size:28px; font-weight:700; color:var(--gold-light); letter-spacing:2px; margin-bottom:6px; }
+.splash-sub { font-size:12px; color:var(--gold); opacity:0.6; margin-bottom:30px; }
+.splash-btn {
+  padding:14px 50px; background:linear-gradient(135deg,var(--gold),#B8962E);
+  color:#2C1810; border:none; border-radius:50px; font-size:16px; font-weight:600;
+  cursor:pointer; letter-spacing:2px; box-shadow:0 4px 20px rgba(201,169,110,0.3);
+}
+/* ===== 顶部 ===== */
+.header {
+  background:linear-gradient(135deg,#2C1810,#4A2C1A);
+  padding: 14px 16px;
+  position:sticky; top:0; z-index:100;
+  box-shadow:var(--shadow);
+}
+.header-top { display:flex; align-items:center; justify-content:space-between; }
+.header-title { color:var(--gold-light); font-size:15px; font-weight:600; }
+.header-store { font-size:11px; color:var(--gold); opacity:0.7; }
+.header-actions { display:flex; gap:6px; }
+.header-actions button {
+  padding:6px 12px; border:1px solid rgba(255,255,255,0.2); border-radius:6px;
+  background:transparent; color:rgba(255,255,255,0.8); font-size:11px; cursor:pointer;
+}
+/* ===== 统计条 ===== */
+.stats { display:flex; gap:8px; padding:12px 16px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.stat-item {
+  flex-shrink:0; background:var(--card); border-radius:var(--radius-sm); 
+  padding:10px 16px; border:1px solid var(--border); min-width:100px;
+  box-shadow:var(--shadow);
+}
+.stat-item .lbl { font-size:10px; color:var(--text-light); }
+.stat-item .val { font-size:18px; font-weight:700; color:var(--primary-dark); }
+/* ===== 操作按钮 ===== */
+.toolbar { display:flex; gap:8px; padding:0 16px 10px; flex-wrap:wrap; }
+.toolbar button {
+  padding:8px 16px; border:none; border-radius:var(--radius-sm); font-size:12px;
+  font-weight:500; cursor:pointer; display:flex; align-items:center; gap:4px;
+}
+.btn-primary { background:var(--primary-dark); color:#fff; }
+.btn-success { background:var(--success); color:#fff; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-warning { background:var(--warning); color:#fff; }
+.btn-outline { background:var(--card); border:1px solid var(--border); color:var(--text); }
+.btn-sm { padding:4px 10px !important; font-size:11px !important; }
+/* ===== 客户卡片 ===== */
+.customer-card {
+  background:var(--card); border-radius:var(--radius);
+  margin:0 16px 12px; border:1px solid var(--border);
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.card-header {
+  padding:10px 14px; background:var(--primary-light);
+  display:flex; justify-content:space-between; align-items:center;
+  border-bottom:1px solid var(--border);
+}
+.card-header .num { font-weight:700; color:var(--primary-dark); font-size:15px; }
+.card-body { padding:12px 14px; }
+/* 信息网格 */
+.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; }
+.info-grid input {
+  width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px;
+  font-size:13px; background:#FFFDF8;
+}
+.info-grid input:focus { outline:none; border-color:var(--primary-dark); }
+.info-grid .full { grid-column:1/-1; }
+/* 粘贴区 */
+.paste-area {
+  width:100%; min-height:44px; padding:8px 10px;
+  border:1px dashed var(--primary); border-radius:6px;
+  font-size:12px; color:var(--text); background:#FFFDF8;
+  margin-bottom:8px; resize:vertical;
+}
+.paste-area::placeholder { color:#ccc; font-size:11px; }
+/* 图片网格 */
+.img-grid { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.img-slot {
+  width:72px; height:72px; border-radius:6px;
+  border:1px dashed var(--border); overflow:hidden;
+  position:relative; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  background:#F9F9F9; flex-shrink:0;
+}
+.img-slot img { width:100%; height:100%; object-fit:cover; }
+.img-slot .label { font-size:10px; color:#bbb; text-align:center; line-height:1.2; }
+.img-slot .del {
+  position:absolute; top:2px; right:2px; width:18px; height:18px;
+  background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%;
+  font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.img-slot .amt {
+  position:absolute; bottom:0; left:0; right:0;
+  border:none; padding:2px; font-size:9px; text-align:center;
+  background:rgba(255,255,255,0.92);
+}
+/* 类别标签 */
+.cat-label {
+  font-size:11px; font-weight:600; color:var(--text-light);
+  margin-top:8px; margin-bottom:2px; display:flex; justify-content:space-between; align-items:center;
+}
+.cat-label .sum { font-size:12px; font-weight:700; color:var(--primary-dark); }
+.cat-label .sum.danger { color:var(--danger); }
+/* ===== 对账模态框 ===== */
+.modal-overlay {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.5); z-index:1000;
+  display:none; overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
+.modal-overlay.show { display:block; }
+.modal {
+  background:var(--card); margin:20px 12px; border-radius:var(--radius);
+  box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden;
+}
+.modal-hd {
+  padding:14px 16px; border-bottom:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  position:sticky; top:0; background:var(--card); z-index:10;
+}
+.modal-hd h3 { font-size:16px; color:var(--primary-dark); }
+.modal-close { width:30px; height:30px; border:none; background:none; font-size:24px; cursor:pointer; color:var(--text-light); }
+.modal-bd { padding:16px; }
+.modal-ft { padding:12px 16px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
+/* ===== 底部导航 ===== */
+.bottom-nav {
+  position:fixed; bottom:0; left:0; right:0; height:64px;
+  background:var(--card); border-top:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-around;
+  z-index:99; padding-bottom:8px;
+}
+.bottom-nav button {
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  border:none; background:none; font-size:10px; color:var(--text-light);
+  cursor:pointer; padding:4px 12px;
+}
+.bottom-nav button .icon { font-size:20px; }
+.bottom-nav button.active { color:var(--primary-dark); font-weight:600; }
+/* ===== 空状态 ===== */
+.empty { text-align:center; padding:40px 20px; color:var(--text-light); font-size:13px; }
+.empty .icon { font-size:40px; margin-bottom:10px; }
+/* ===== 响应式 ===== */
+@media (min-width:768px) {
+  body { max-width:800px; margin:0 auto; border-left:1px solid var(--border); border-right:1px solid var(--border); min-height:100vh; }
+  .stats { justify-content:center; }
+}
+</style>
+</head>
+<body>
+<div id="splash">
+  <div class="splash-logo"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+  <div class="splash-store">富通城肯德基</div>
+  <div class="splash-title">生日餐会对账自核系统</div>
+  <div class="splash-sub">数据存在本机 · 导出备份防丢失</div>
+  <button class="splash-btn" onclick="enterSystem()">进入系统</button>
+</div>
+
+<div class="header">
+  <div class="header-top">
+    <div><div class="header-title">富通城肯德基</div><div class="header-store">生日餐会对账自核系统</div></div>
+    <div class="header-actions">
+      <button onclick="showCashAccount()">💰 对账</button>
+      <button onclick="showBackup()">💾 备份</button>
+    </div>
+  </div>
+</div>
+
+<div class="stats" id="statsBar"></div>
+
+<div class="toolbar">
+  <button class="btn-primary" onclick="addCustomer()">➕ 新增客户</button>
+  <button class="btn-outline" onclick="showSortOption()">🔽 排序</button>
+  <button class="btn-outline" onclick="exportBackup()">📤 导出数据</button>
+</div>
+
+<div id="customerList"></div>
+
+<div class="empty" id="emptyState">
+  <div class="icon">📋</div>
+  <p>暂无客户数据</p>
+  <p style="font-size:12px;margin-top:4px;">点击上方「新增客户」开始登记</p>
+</div>
+
+<!-- ===== 底部导航 ===== -->
+<div class="bottom-nav">
+  <button class="active" onclick="switchTab('list',this)"><span class="icon">📋</span>登记表</button>
+  <button onclick="switchTab('reports',this)"><span class="icon">📊</span>统计</button>
+  <button onclick="showCashAccount()"><span class="icon">💰</span>现金对账</button>
+  <button onclick="showBackup()"><span class="icon">💾</span>备份</button>
+</div>
+
+<!-- ===== 对账模态框 ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="modalTitle">标题</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-bd" id="modalBody"></div>
+    <div class="modal-ft" id="modalFooter"></div>
+  </div>
+</div>
+
+<script>
+// ====== IndexedDB 数据库 ======
+const DB_NAME = "BirthdaySystem";
+const DB_VER = 1;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains("customers")) {
+        const store = db.createObjectStore("customers", { keyPath: "id", autoIncrement: true });
+        store.createIndex("birthday", "birthday", { unique: false });
+        store.createIndex("created_at", "created_at", { unique: false });
+      }
+      if (!db.objectStoreNames.contains("images")) {
+        const imgStore = db.createObjectStore("images", { keyPath: "id", autoIncrement: true });
+        imgStore.createIndex("customer_id", "customer_id", { unique: false });
+        imgStore.createIndex("category", "category", { unique: false });
+      }
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+let db = null;
+async function getDB() {
+  if (db) return db;
+  db = await openDB();
+  return db;
+}
+
+// ====== 数据操作 ======
+async function getAllCustomers() {
+  const d = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction("customers", "readonly");
+    const store = tx.objectStore("customers");
+    const req = store.getAll();
+    req.onsuccess = () => {
+      let list = req.result || [];
+      // 按生日月日排序 + 按创建时间排
+      list.sort((a,b) => {
+        const aKey = (a.birthday||"").length >= 5 ? a.birthday.slice(5) : "99-99";
+        const bKey = (b.birthday||"").length >= 5 ? b.birthday.slice(5) : "99-99";
+        if (aKey !== bKey) return aKey.localeCompare(bKey);
+        return (a.created_at||"").localeCompare(b.created_at||"");
+      });
+      resolve(list);
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getCustomer(id) {
+  const d = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction("customers", "readonly");
+    const req = tx.objectStore("customers").get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveCustomer(c) {
+  const d = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction("customers", "readwrite");
+    const store = tx.objectStore("customers");
+    const req = c.id ? store.put(c) : store.add(c);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function deleteCustomer(id) {
+  const d = await getDB();
+  // 先删关联图片
+  const imgs = await getImages(id);
+  const tx = d.transaction(["customers", "images"], "readwrite");
+  tx.objectStore("customers").delete(id);
+  imgs.forEach(img => tx.objectStore("images").delete(img.id));
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = resolve;
+    tx.onerror = reject;
+  });
+}
+
+async function getImages(customer_id) {
+  const d = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction("images", "readonly");
+    const store = tx.objectStore("images");
+    const idx = store.index("customer_id");
+    const req = idx.getAll(customer_id);
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getAllImages() {
+  const d = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction("images", "readonly");
+    const req = tx.objectStore("images").getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveImage(img) {
+  const d = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction("images", "readwrite");
+    const store = tx.objectStore("images");
+    const req = img.id ? store.put(img) : store.add(img);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function deleteImage(id) {
+  const d = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction("images", "readwrite");
+    tx.objectStore("images").delete(id);
+    tx.oncomplete = resolve;
+    tx.onerror = reject;
+  });
+}
+// ====== 进入系统 ======
+async function enterSystem() {
+  document.getElementById("splash").classList.add("hide");
+  loadData();
+}
+
+async function loadData() {
+  const list = await getAllCustomers();
+  renderList(list);
+  renderStats(list);
+}
+
+// ====== 统计 ======
+function renderStats(list) {
+  const total = list.length;
+  let depositTotal = 0;
+  const today = new Date().toISOString().slice(0,10);
+  let todayAdded = 0;
+  
+  // 异步统计预付总额
+  Promise.all(list.map(async c => {
+    const imgs = await getImages(c.id);
+    imgs.filter(i => i.category === "payment").forEach(i => depositTotal += Number(i.amount||0));
+    if (c.created_at && c.created_at.startsWith(today)) todayAdded++;
+  })).then(() => {
+    document.getElementById("statsBar").innerHTML = `
+      <div class="stat-item"><div class="lbl">客户总数</div><div class="val">${total}</div></div>
+      <div class="stat-item"><div class="lbl">预付总额</div><div class="val">¥${depositTotal.toFixed(0)}</div></div>
+      <div class="stat-item"><div class="lbl">今日新增</div><div class="val">${todayAdded}</div></div>
+    `;
+  });
+}
+
+// ====== 渲染列表 ======
+function renderList(list) {
+  const container = document.getElementById("customerList");
+  const empty = document.getElementById("emptyState");
+  
+  if (list.length === 0) {
+    container.innerHTML = "";
+    empty.style.display = "block";
+    return;
+  }
+  empty.style.display = "none";
+  
+  let h = "";
+  list.forEach((c, i) => {
+    h += '<div class="customer-card" id="card_' + c.id + '">';
+    h += '<div class="card-header"><span class="num">#' + (i+1) + ' ' + escHtml(c.name||"新客户") + '</span><button class="btn-sm btn-danger" onclick="confirmDelete(' + c.id + ')">删除</button></div>';
+    h += '<div class="card-body">';
+    
+    // 粘贴区
+    h += '<textarea class="paste-area" id="paste_' + c.id + '" placeholder="📋 在此粘贴微信聊天文字，自动识别填入下方&#10;格式如：彭家进，6月5日，17:30，9岁，D区，15人" oninput="autoParse(' + c.id + ',this.value)"></textarea>';
+    
+    // 信息网格
+    h += '<div class="info-grid">';
+    h += '<input id="name_' + c.id + '" value="' + escHtml(c.name||"") + '" placeholder="姓名" onchange="saveField(' + c.id + ',\\"name\\",this.value)">';
+    h += '<input id="birthday_' + c.id + '" value="' + escHtml(c.birthday||"") + '" placeholder="生日 如6月5日" onchange="saveField(' + c.id + ',\\"birthday\\",this.value)">';
+    h += '<input id="age_' + c.id + '" value="' + escHtml(c.age||"") + '" placeholder="年龄" onchange="saveField(' + c.id + ',\\"age\\",this.value)">';
+    h += '<input id="people_' + c.id + '" value="' + escHtml(c.people||"") + '" placeholder="人数" onchange="saveField(' + c.id + ',\\"people\\",this.value)">';
+    h += '<input class="full" id="zone_' + c.id + '" value="' + escHtml(c.zone||"") + '" placeholder="区域 如D区" onchange="saveField(' + c.id + ',\\"zone\\",this.value)">';
+    h += '</div>';
+    
+    // 四类图片
+    const cats = [
+      {key:"chat", label:"📱 微信沟通记录"},
+      {key:"payment", label:"💳 顾客付款截图"},
+      {key:"group", label:"📢 生日群沟通记录"},
+      {key:"receipt", label:"🧾 入机小票和确认单"}
+    ];
+    cats.forEach(cat => {
+      h += '<div class="cat-label">' + cat.label + ' <span id="sum_' + c.id + '_' + cat.key + '" class="sum' + (cat.key==="receipt"?" danger":"") + '"></span></div>';
+      h += '<div class="img-grid" id="grid_' + c.id + '_' + cat.key + '"></div>';
+    });
+    
+    h += '</div></div>';
+  });
+  container.innerHTML = h;
+  
+  // 异步加载图片
+  list.forEach(c => loadCustomerImages(c.id));
+}
+
+function escHtml(s) {
+  if (!s) return "";
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+// ====== 图片加载 ======
+async function loadCustomerImages(cid) {
+  const imgs = await getImages(cid);
+  const cats = ["chat","payment","group","receipt"];
+  
+  cats.forEach(cat => {
+    const grid = document.getElementById("grid_" + cid + "_" + cat);
+    if (!grid) return;
+    const catImgs = imgs.filter(i => i.category === cat);
+    
+    let h = "";
+    catImgs.forEach(img => {
+      h += '<div class="img-slot">';
+      h += '<img src="' + img.data + '" onclick="window.open(\\'' + img.data + '\\')">';
+      h += '<button class="del" onclick="deleteImg(' + img.id + ',' + cid + ')">×</button>';
+      if (cat === "payment" || cat === "receipt") {
+        const v = Number(img.amount||0);
+        h += '<input class="amt" type="number" step="0.01" value="' + v.toFixed(2) + '" onchange="updateImgAmount(' + img.id + ',' + cid + ',this.value)">';
+      }
+      h += '</div>';
+    });
+    // 上传按钮（最多5张）
+    if (catImgs.length < 5) {
+      h += '<div class="img-slot" onclick="uploadImage(' + cid + ',\\'' + cat + '\\',' + (5-catImgs.length) + ')"><div class="label">+ 上传</div></div>';
+    }
+    grid.innerHTML = h;
+    
+    // 汇总金额
+    if (cat === "payment" || cat === "receipt") {
+      const total = catImgs.reduce((s, i) => s + Number(i.amount||0), 0);
+      const el = document.getElementById("sum_" + cid + "_" + cat);
+      if (el) el.textContent = (cat === "payment" ? "预付: ¥" : "入机: ¥") + total.toFixed(0);
+    }
+  });
+}
+
+// ====== 上传图片 ======
+async async function uploadImage(cid, category) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // 转为 base64
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+      const data = ev.target.result;
+      const img = {
+        customer_id: cid,
+        category: category,
+        data: data,
+        amount: 0,
+        created_at: new Date().toISOString()
+      };
+      await saveImage(img);
+      
+      // 如果是付款或入机，弹出金额
+      if (category === "payment" || category === "receipt") {
+        const amt = prompt("请输入金额（¥）：", "0");
+        if (amt !== null && !isNaN(parseFloat(amt))) {
+          img.amount = parseFloat(amt);
+          // 更新保存
+          const allImgs = await getImages(cid);
+          const latest = allImgs.filter(i => i.category === category);
+          latest[latest.length-1].amount = parseFloat(amt);
+          await saveImage(latest[latest.length-1]);
+        }
+      }
+      
+      loadCustomerImages(cid);
+      loadData();
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+async function deleteImg(imgId, cid) {
+  if (!confirm("确定删除此图片？")) return;
+  await deleteImage(imgId);
+  loadCustomerImages(cid);
+  loadData();
+}
+
+async function updateImgAmount(imgId, cid, val) {
+  const d = await getDB();
+  const tx = d.transaction("images", "readwrite");
+  const store = tx.objectStore("images");
+  const img = await new Promise(r => { const q = store.get(imgId); q.onsuccess = () => r(q.result); });
+  if (img) {
+    img.amount = parseFloat(val) || 0;
+    store.put(img);
+  }
+  tx.oncomplete = () => { loadCustomerImages(cid); loadData(); };
+}
+
+// ====== 新增客户 ======
+async async function addCustomer() {
+  const c = {
+    name: "",
+    birthday: "",
+    age: "",
+    zone: "",
+    people: "",
+    created_at: new Date().toISOString()
+  };
+  const id = await saveCustomer(c);
+  await loadData();
+  setTimeout(() => {
+    const paste = document.getElementById("paste_" + id);
+    if (paste) paste.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 300);
+}
+
+// ====== 保存字段 ======
+async function saveField(id, field, value) {
+  const c = await getCustomer(id);
+  if (!c) return;
+  c[field] = value;
+  if (field === "birthday" || field === "name") {
+    // 重排
+    await saveCustomer(c);
+    await loadData();
+  } else {
+    await saveCustomer(c);
+  }
+}
+
+// ====== 确认删除 ======
+async function confirmDelete(id) {
+  if (!confirm("⚠️ 确定删除此客户？\\n\\n删除后：\\n- 登记信息将永久删除\\n- 所有截图图片将永久删除\\n- 关联金额统计将自动更新\\n\\n此操作不可恢复！")) return;
+  await deleteCustomer(id);
+  await loadData();
+}
+
+// ====== 粘贴自动解析 ======
+let parseTimers = {};
+function autoParse(cid, text) {
+  clearTimeout(parseTimers[cid]);
+  parseTimers[cid] = setTimeout(() => parsePaste(cid, text), 300);
+}
+
+function parsePaste(cid, text) {
+  if (!text || text.length < 5) return;
+  const clean = text.replace(/\\u00A0|\\u3000/g, " ").replace(/\\s+/g, " ");
+  
+  // 姓名
+  let name = "";
+  const cnMatch = clean.match(/[\\u4e00-\\u9fff]{2,4}/g);
+  if (cnMatch) {
+    const excludes = ["微信","聊天","记录","生日","餐会","预定","区域","人数","电话","付款","确认","通知","截图"];
+    for (const w of cnMatch) {
+      if (!excludes.includes(w) && w.length >= 2) { name = w; break; }
+    }
+  }
+  if (name) {
+    document.getElementById("name_" + cid).value = name;
+    getCustomer(cid).then(c => { c.name = name; saveCustomer(c); });
+  }
+  
+  // 生日
+  const bdayMatch = clean.match(/(1[0-2]|0?[1-9])[月]([12]\\d|3[01]|0?[1-9])[日号]?/);
+  if (bdayMatch) {
+    const bday = parseInt(bdayMatch[1]) + "月" + parseInt(bdayMatch[2]) + "日";
+    document.getElementById("birthday_" + cid).value = bday;
+    getCustomer(cid).then(c => { c.birthday = bday; saveCustomer(c); });
+  }
+  
+  // 年龄
+  const ageMatch = clean.match(/(\\d{1,2})(?:岁|周岁)/);
+  if (ageMatch) {
+    document.getElementById("age_" + cid).value = ageMatch[1];
+    getCustomer(cid).then(c => { c.age = ageMatch[1]; saveCustomer(c); });
+  }
+  
+  // 人数
+  const peopleMatch = clean.match(/(\\d+)(?:位|人|个|名)/);
+  if (peopleMatch) {
+    document.getElementById("people_" + cid).value = peopleMatch[1];
+    getCustomer(cid).then(c => { c.people = peopleMatch[1]; saveCustomer(c); });
+  }
+  
+  // 区域
+  const zoneMatch = clean.match(/([A-D])区/);
+  if (zoneMatch) {
+    document.getElementById("zone_" + cid).value = zoneMatch[1] + "区";
+    getCustomer(cid).then(c => { c.zone = zoneMatch[1] + "区"; saveCustomer(c); });
+  }
+  
+  // 视觉反馈
+  const ta = document.getElementById("paste_" + cid);
+  if (ta) {
+    ta.style.borderColor = "var(--success)";
+    ta.style.background = "#F0FFF0";
+    setTimeout(() => { ta.style.borderColor = ""; ta.style.background = ""; }, 1500);
+  }
+}
+
+// ====== 排序 ======
+function showSortOption() {
+  const h = "<p style='margin-bottom:12px;'>当前排序：按生日月日排序，同天生日的按登记时间排序</p>";
+  openModal("🔽 排序说明", h);
+}
+// ====== 现金对账 ======
+async function showCashAccount() {
+  const customers = await getAllCustomers();
+  const allImgs = await getAllImages();
+  const now = new Date();
+  const month = now.toISOString().slice(0,7);
+  const monthStart = month + "-01";
+  
+  // 按月份筛选付款和入机
+  const paymentImgs = allImgs.filter(i => i.category === "payment" && i.created_at && i.created_at >= monthStart);
+  const receiptImgs = allImgs.filter(i => i.category === "receipt" && i.created_at && i.created_at >= monthStart);
+  
+  const paymentTotal = paymentImgs.reduce((s, i) => s + Number(i.amount||0), 0);
+  const receiptTotal = receiptImgs.reduce((s, i) => s + Number(i.amount||0), 0);
+  
+  // 期初余额（从localStorage读取）
+  let openingBalance = parseFloat(localStorage.getItem("cash_opening_" + month) || "0");
+  
+  const balance = openingBalance + paymentTotal - receiptTotal;
+  
+  let h = '<h4 style="margin-bottom:12px;">💰 现金对账 - ' + month + '</h4>';
+  
+  h += '<div style="background:#E8F5E9;padding:10px;border-radius:8px;font-size:12px;color:#2E7D32;margin-bottom:12px;">';
+  h += '✅ 取钱金额 = 各客户「付款截图」金额自动汇总<br>';
+  h += '✅ 入机金额 = 各客户「入机小票」金额自动汇总<br>';
+  h += '💡 修改截图金额后，对账数据自动更新';
+  h += '</div>';
+  
+  // 期初余额
+  h += '<div style="background:#FFF8F0;padding:12px;border-radius:8px;margin-bottom:12px;">';
+  h += '<label style="font-size:13px;font-weight:500;">📅 期初余额（上月结转）：</label>';
+  h += '<input type="number" step="0.01" id="cashOpening" value="' + openingBalance.toFixed(2) + '" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-weight:600;margin-top:4px;" onchange="saveOpening(this.value)">';
+  h += '</div>';
+  
+  // 取钱汇总
+  h += '<div style="margin-bottom:12px;">';
+  h += '<div style="font-weight:600;font-size:13px;margin-bottom:6px;">💰 取钱 = 顾客付款截图金额</div>';
+  h += '<table style="width:100%;font-size:12px;border-collapse:collapse;"><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border);">来源</th><th style="text-align:right;padding:6px;border-bottom:1px solid var(--border);">金额</th></tr>';
+  paymentImgs.forEach(img => {
+    const c = customers.find(x => x.id === img.customer_id);
+    h += '<tr><td style="padding:4px 6px;">' + (c?c.name:"?") + '</td><td style="text-align:right;padding:4px 6px;color:var(--success);font-weight:600;">+¥' + Number(img.amount||0).toFixed(2) + '</td></tr>';
+  });
+  h += '<tr style="background:var(--primary-light);font-weight:600;"><td style="padding:6px;">取钱合计</td><td style="text-align:right;padding:6px;color:var(--success);">+¥' + paymentTotal.toFixed(2) + '</td></tr>';
+  h += '</table>';
+  h += '</div>';
+  
+  // 入机汇总
+  h += '<div style="margin-bottom:12px;">';
+  h += '<div style="font-weight:600;font-size:13px;margin-bottom:6px;">🧾 入机 = 入机小票金额</div>';
+  h += '<table style="width:100%;font-size:12px;border-collapse:collapse;"><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border);">来源</th><th style="text-align:right;padding:6px;border-bottom:1px solid var(--border);">金额</th></tr>';
+  receiptImgs.forEach(img => {
+    const c = customers.find(x => x.id === img.customer_id);
+    h += '<tr><td style="padding:4px 6px;">' + (c?c.name:"?") + '</td><td style="text-align:right;padding:4px 6px;color:var(--danger);font-weight:600;">-¥' + Number(img.amount||0).toFixed(2) + '</td></tr>';
+  });
+  h += '<tr style="background:var(--primary-light);font-weight:600;"><td style="padding:6px;">入机合计</td><td style="text-align:right;padding:6px;color:var(--danger);">-¥' + receiptTotal.toFixed(2) + '</td></tr>';
+  h += '</table>';
+  h += '</div>';
+  
+  // 余额
+  h += '<div style="background:' + (balance>=0?"#F0FFF0":"#FFF0F0") + ';border:2px solid ' + (balance>=0?"var(--success)":"var(--danger)") + ';border-radius:8px;padding:16px;text-align:center;">';
+  h += '<div style="font-size:13px;color:var(--text-light);margin-bottom:4px;">余额 = 期初余额 + 取钱 − 入机</div>';
+  h += '<div style="font-size:28px;font-weight:700;color:' + (balance>=0?"var(--success)":"var(--danger)") + ';">¥' + balance.toFixed(2) + '</div>';
+  h += '<div style="font-size:11px;color:var(--text-light);margin-top:4px;">期初 ¥' + openingBalance.toFixed(2) + ' + 取钱 ¥' + paymentTotal.toFixed(2) + ' − 入机 ¥' + receiptTotal.toFixed(2) + '</div>';
+  h += '</div>';
+  
+  openModal("💰 现金对账", h);
+}
+
+function saveOpening(val) {
+  const now = new Date();
+  const month = now.toISOString().slice(0,7);
+  localStorage.setItem("cash_opening_" + month, parseFloat(val) || 0);
+}
+
+// ====== 统计页面 ======
+async function switchTab(tab, btn) {
+  document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  
+  if (tab === "list") {
+    document.getElementById("customerList").style.display = "";
+    document.getElementById("emptyState").style.display = "";
+    loadData();
+  } else if (tab === "reports") {
+    showReport();
+  }
+}
+
+async function showReport() {
+  const customers = await getAllCustomers();
+  const allImgs = await getAllImages();
+  const today = new Date().toISOString().slice(0,10);
+  const month = today.slice(0,7);
+  
+  const monthImgs = allImgs.filter(i => i.created_at && i.created_at.startsWith(month));
+  const paymentTotal = monthImgs.filter(i => i.category === "payment").reduce((s,i) => s + Number(i.amount||0), 0);
+  const receiptTotal = monthImgs.filter(i => i.category === "receipt").reduce((s,i) => s + Number(i.amount||0), 0);
+  const monthCustomers = customers.filter(c => c.created_at && c.created_at.startsWith(month));
+  
+  let h = '<h4 style="margin-bottom:12px;">📊 本月统计 (' + month + ')</h4>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+  h += '<div style="background:var(--card);padding:14px;border-radius:8px;border:1px solid var(--border);text-align:center;"><div style="font-size:11px;color:var(--text-light);">本月客户</div><div style="font-size:24px;font-weight:700;color:var(--primary-dark);">' + monthCustomers.length + '</div></div>';
+  h += '<div style="background:var(--card);padding:14px;border-radius:8px;border:1px solid var(--border);text-align:center;"><div style="font-size:11px;color:var(--text-light);">预付总额</div><div style="font-size:24px;font-weight:700;color:var(--success);">¥' + paymentTotal.toFixed(0) + '</div></div>';
+  h += '<div style="background:var(--card);padding:14px;border-radius:8px;border:1px solid var(--border);text-align:center;"><div style="font-size:11px;color:var(--text-light);">入机总额</div><div style="font-size:24px;font-weight:700;color:var(--danger);">¥' + receiptTotal.toFixed(0) + '</div></div>';
+  h += '<div style="background:var(--card);padding:14px;border-radius:8px;border:1px solid var(--border);text-align:center;"><div style="font-size:11px;color:var(--text-light);">总客户数</div><div style="font-size:24px;font-weight:700;color:var(--primary-dark);">' + customers.length + '</div></div>';
+  h += '</div>';
+  
+  openModal("📊 统计", h);
+}
+
+// ====== 备份与导出 ======
+async function showBackup() {
+  const h = '<h4 style="margin-bottom:12px;">💾 数据备份与恢复</h4>' +
+    '<p style="font-size:12px;color:var(--text-light);margin-bottom:12px;">数据存在本机浏览器 IndexedDB 中。建议定期导出备份，换手机或清缓存后可恢复。</p>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;">' +
+    '<button class="btn-primary" style="padding:12px;border:none;border-radius:8px;font-size:14px;cursor:pointer;" onclick="exportBackup()">📤 导出备份（保存到手机）</button>' +
+    '<button class="btn-success" style="padding:12px;border:none;border-radius:8px;font-size:14px;cursor:pointer;" onclick="importBackup()">📥 导入备份（恢复数据）</button>' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-light);margin-top:12px;">💡 导出文件可存到微信收藏、iCloud、或发到电脑保存</p>';
+  openModal("💾 备份管理", h);
+}
+
+async function exportBackup() {
+  const customers = await getAllCustomers();
+  const allImgs = await getAllImages();
+  
+  // 移除图片 data 中的大数据（只保留链接信息，导出完整备份包含图片）
+  const backup = {
+    version: 1,
+    exported_at: new Date().toISOString(),
+    customers: customers,
+    images: allImgs,
+    cash_data: {}
+  };
+  
+  // 导出现金期初余额
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith("cash_opening_")) {
+      backup.cash_data[key] = localStorage.getItem(key);
+    }
+  }
+  
+  const json = JSON.stringify(backup);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "生日餐会备份_" + new Date().toISOString().slice(0,10) + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  // 显示备份大小
+  const size = (json.length / 1024).toFixed(1);
+  closeModal();
+  setTimeout(() => {
+    alert("✅ 备份成功！\\n\\n文件大小：" + size + "KB\\n\\n请将文件保存到安全位置（微信收藏/iCloud等）");
+  }, 300);
+}
+
+async function importBackup() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json";
+  input.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+      try {
+        const backup = JSON.parse(ev.target.result);
+        if (!backup.customers || !backup.images) {
+          alert("❌ 备份文件格式错误");
+          return;
+        }
+        
+        if (!confirm("确定导入备份？\\n\\n当前数据将被覆盖！\\n\\n建议先导出当前数据再导入。")) return;
+        
+        // 清空旧数据
+        const d = await getDB();
+        const tx = d.transaction(["customers", "images"], "readwrite");
+        const cStore = tx.objectStore("customers");
+        const iStore = tx.objectStore("images");
+        const oldC = await new Promise(r => { const q = cStore.getAll(); q.onsuccess = () => r(q.result); });
+        const oldI = await new Promise(r => { const q = iStore.getAll(); q.onsuccess = () => r(q.result); });
+        oldC.forEach(x => cStore.delete(x.id));
+        oldI.forEach(x => iStore.delete(x.id));
+        
+        // 导入新数据
+        backup.customers.forEach(c => cStore.add(c));
+        backup.images.forEach(i => iStore.add(i));
+        
+        tx.oncomplete = () => {
+          // 恢复现金数据
+          if (backup.cash_data) {
+            Object.keys(backup.cash_data).forEach(key => {
+              localStorage.setItem(key, backup.cash_data[key]);
+            });
+          }
+          
+          closeModal();
+          loadData();
+          alert("✅ 导入成功！共恢复 " + backup.customers.length + " 位客户、" + backup.images.length + " 张图片");
+        };
+      } catch(err) {
+        alert("❌ 导入失败：" + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ====== 模态框 ======
+function openModal(title, bodyHTML) {
+  document.getElementById("modalTitle").textContent = title;
+  document.getElementById("modalBody").innerHTML = bodyHTML;
+  document.getElementById("modalFooter").innerHTML = "";
+  document.getElementById("modalOverlay").classList.add("show");
+}
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("show");
+}
+</script>
+</body>
+</html>
